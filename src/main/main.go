@@ -4,8 +4,10 @@ import (
 	"fmt"
 )
 
-func main() {
-	fmt.Println("Welcome to TMG")
+var znum = [...]rune{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '\u218A', '\u218B'}
 
-	fmt.Println("Thank you for playing TMG.")
+func main() {
+	testTime := ztime{0, 1, 2, 3}
+
+	fmt.Println("Remaining Time:", testTime)
 }
