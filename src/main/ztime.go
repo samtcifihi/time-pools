@@ -1,7 +1,56 @@
 package main
 
+import (
+	"strconv"
+)
+
 // dwells, breathers, trices, lulls
-type ztime [4]byte
+type ztime [4]int
+
+// Format formats a ztime according to a provided format string.
+// Accepted tokens are %d, %b, %t, and %l.
+// %% escapes the second %
+func (z *ztime) Format(formatString string) string {
+	output := ""
+
+	// separate formatString into tokens
+	tokens := []string{}
+	skipNext := false
+	for i, v := range formatString {
+		if skipNext == false {
+			if (v != '%') || (len(formatString) < i + 2){
+				tokens = append(tokens, string(v))
+			} else {
+				tokens = append(tokens, formatString[i:i+2])
+				skipNext = true
+			}
+		} else {
+			skipNext = false
+		}
+	}
+
+	// evaluate tokens and assign to output
+	for _, v := range tokens {
+		if len(v) == 1 {
+			output += v
+		} else {
+			switch v {
+			case "%d":
+				output += dtoz(z[0])
+			case "%b":
+				output += dtoz(z[1])
+			case "%t":
+				output += dtoz(z[2])
+			case "%l":
+				output += dtoz(z[3])
+			case "%%":
+				output += "%"
+			}
+		}
+	}
+
+	return output
+}
 
 func (z *ztime) Dec() bool {
 	timeRemaining := true
@@ -71,5 +120,22 @@ func (z *ztime) Set(time string) {
 				z[x] = 11
 			}
 		}
+	}
+}
+
+// dtoz converts a decimal number [0, 11] to a dozenal digit
+// it has poor to no error reporting
+func dtoz(i int) string {
+	if i < 10 && i >= 0 {
+		return strconv.Itoa(i)
+	}
+
+	switch i {
+	case 10:
+		return "\u218a"
+	case 11:
+		return "\u218b"
+	default:
+		return ""
 	}
 }

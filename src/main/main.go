@@ -34,7 +34,7 @@ func main() {
 			running = false
 		case "ls": // TODO: improve formatting
 			for _, v := range *poolCollection {
-				fmt.Println(v)
+				fmt.Println(v.name, v.running, v.ztime.Format("%d;%b%t%l"))
 			}
 		case "new":
 			newPool(poolCollection, tokens[1], tokens[2])
