@@ -33,9 +33,7 @@ func main() {
 		case "exit":
 			running = false
 		case "ls": // TODO: improve formatting
-			for _, v := range *poolCollection {
-				fmt.Println(v.name, v.running, v.ztime.Format("%d;%b%t%l"))
-			}
+			printPools(*poolCollection, []int{})
 		case "new":
 			if len(tokens) >= 3 {
 				newPool(poolCollection, tokens[1], tokens[2])
@@ -53,6 +51,29 @@ func main() {
 			}
 		case "pause":
 			pauseAll(poolCollection)
+		case "siphon":
+			// with 1 argument, move remaining time to overflow
+			// if no overflow marked, do nothing
+
+			// with 2 arguments, move remaining time to other pool
+
+			// with 0 arguments, do nothing
+
+		case "overflow":
+			// set previous overflow (if any) to false
+			for i := range *poolCollection {
+				(*poolCollection)[i].overflow = false
+			}
+
+			if len(tokens) >= 2 {
+				// set new overflow (if valid)
+				temp, err := strconv.Atoi(tokens[1])
+				if err == nil {
+					if (temp >= 0) && (temp < len(*poolCollection)) {
+						(*poolCollection)[temp].overflow = true
+					}
+				}
+			}
 		default:
 			fmt.Println("Invalid Argument")
 		}
@@ -68,6 +89,12 @@ func runPool(pools *[]Pool, p int) {
 	(*pools)[p].SetRunning(true)
 	(*pools)[p].ztime.Dec()
 
+	// hacky `exec.Command("clear").Run()`
+	for i := 0; i < 0x80; i++ {
+		fmt.Println()
+	}
+	printPools(*pools, []int{p})
+
 	// Create ticker to Dec() every lull
 	poolManager := time.NewTicker(4166 * time.Millisecond)
 	done := make(chan bool)
@@ -80,8 +107,14 @@ func runPool(pools *[]Pool, p int) {
 			case <-poolManager.C:
 				if (*pools)[p].ztime.Dec() == false {
 					fmt.Println("Time Expired")
+				} else {
+					// display time remaining
+					// hacky `exec.Command("clear").Run()`
+					for i := 0; i < 0x80; i++ {
+						fmt.Println()
+					}
+					printPools(*pools, []int{p})
 				}
-				// TODO: Display time remaining automatically
 			}
 		}
 	}()
@@ -114,4 +147,42 @@ func newPool(pools *[]Pool, name string, time string) {
 	p := NewPool(name, time)
 
 	*pools = append(*pools, *p)
+}
+
+func printPools(pools []Pool, selected []int) {
+	if len(selected) == 0 {
+		if len(pools) >= 1 {
+			// print all pools
+			guideSlice := []int{}
+			for i := range pools {
+				guideSlice = append(guideSlice, i)
+			}
+			printPools(pools, guideSlice)
+		}
+	} else if len(selected) == 1 {
+		// print with no index
+		fmt.Printf("    %v  %v\n",
+			pools[selected[0]].ztime.Format("%d;%b%t%l"),
+			pools[selected[0]].name,
+		)
+	} else {
+		// print selected pools with indices
+		// TODO: dozenalize indices
+		for i := range selected {
+			info := ""
+			if pools[selected[i]].running {
+				info = "  running"
+			}
+			if pools[selected[i]].overflow {
+				info += "  overflow"
+			}
+
+			fmt.Printf("[%v]  %v  %v  %v\n",
+				selected[i],
+				pools[selected[i]].ztime.Format("%d;%b%t%l"),
+				pools[selected[i]].name,
+				info,
+			)
+		}
+	}
 }
