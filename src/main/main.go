@@ -52,13 +52,44 @@ func main() {
 		case "pause":
 			pauseAll(poolCollection)
 		case "siphon":
-			// with 1 argument, move remaining time to overflow
-			// if no overflow marked, do nothing
-
-			// with 2 arguments, move remaining time to other pool
-
-			// with 0 arguments, do nothing
-
+			if len(tokens) == 2 {
+				// with 1 argument, move remaining time to overflow
+				// if no overflow marked, do nothing
+				source, err := strconv.Atoi(tokens[1])
+				if (err == nil) && (source >= 0) && (source < len(*poolCollection)) {
+					for target := range *poolCollection { // find overflow pool
+						if ((*poolCollection)[target].overflow == true) &&
+							(target != source) { // can't siphon overflow to overflow
+							// set overflow
+							(*poolCollection)[target].ztime, _ =
+								Sum((*poolCollection)[target].ztime,
+									(*poolCollection)[source].ztime,
+								)
+							// clear siphoned pool
+							(*poolCollection)[source].ztime.Set("0000")
+						}
+					}
+				} else {
+					fmt.Println("Invalid Index")
+				}
+			} else if len(tokens) >= 3 {
+				// with 2 arguments, move remaining time to other pool
+				source, errs := strconv.Atoi(tokens[1])
+				target, errt := strconv.Atoi(tokens[2])
+				if (errs == nil) && (errt == nil) && (source != target) &&
+					(source >= 0) && (source < len(*poolCollection)) &&
+					(target >= 0) && (target < len(*poolCollection)) {
+					// set target pool
+					(*poolCollection)[target].ztime, _ =
+						Sum((*poolCollection)[target].ztime,
+							(*poolCollection)[source].ztime,
+						)
+					// clear siphoned pool
+					(*poolCollection)[source].ztime.Set("0000")
+				} else {
+					fmt.Println("Invalid Index")
+				}
+			}
 		case "overflow":
 			// set previous overflow (if any) to false
 			for i := range *poolCollection {

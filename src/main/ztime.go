@@ -18,7 +18,7 @@ func (z *ztime) Format(formatString string) string {
 	skipNext := false
 	for i, v := range formatString {
 		if skipNext == false {
-			if (v != '%') || (len(formatString) < i + 2){
+			if (v != '%') || (len(formatString) < i+2) {
 				tokens = append(tokens, string(v))
 			} else {
 				tokens = append(tokens, formatString[i:i+2])
@@ -121,6 +121,22 @@ func (z *ztime) Set(time string) {
 			}
 		}
 	}
+}
+
+// Sum adds two ztimes, returning the result and any carry
+// carry will be 0 unless there is an overflow
+func Sum(a ztime, b ztime) (ztime, int) {
+	var z ztime
+	var c int
+
+	for i := 3; i >= 0; i-- {
+		// a + b + c mod 0z10
+		// c = a + b + c - (a + b + c mod 0z10)
+		z[i] = (a[i] + b[i] + c) % 12
+		c = (a[i] + b[i] + c) / 12
+	}
+
+	return z, c
 }
 
 // dtoz converts a decimal number [0, 11] to a dozenal digit
