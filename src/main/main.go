@@ -136,8 +136,25 @@ func runPool(pools *[]Pool, p int) {
 			case <-done:
 				return
 			case <-poolManager.C:
+				// if time has expired
 				if (*pools)[p].ztime.Dec() == false {
-					fmt.Println("Time Expired")
+					if (*pools)[p].overflow {
+						fmt.Println("Time Expired")
+					} else {
+						// find overflow
+						overflow := -1
+						for i := range *pools {
+							if (*pools)[i].overflow {
+								overflow = i
+							}
+						}
+						// run runPool on it
+						if overflow != -1 {
+							runPool(pools, overflow)
+						} else {
+							fmt.Println("Time Expired; No Overflow Found")
+						}
+					}
 				} else {
 					// display time remaining
 					// hacky `exec.Command("clear").Run()`
@@ -202,13 +219,13 @@ func printPools(pools []Pool, selected []int) {
 		for i := range selected {
 			info := ""
 			if pools[selected[i]].running {
-				info = "  running"
+				info = "  [running]"
 			}
 			if pools[selected[i]].overflow {
-				info += "  overflow"
+				info += "  [overflow]"
 			}
 
-			fmt.Printf("[%v]  %v  %v  %v\n",
+			fmt.Printf("[%v]  %v  %v%v\n",
 				selected[i],
 				pools[selected[i]].ztime.Format("%d;%b%t%l"),
 				pools[selected[i]].name,
