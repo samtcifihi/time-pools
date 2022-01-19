@@ -37,16 +37,19 @@ func main() {
 				fmt.Println(v.name, v.running, v.ztime.Format("%d;%b%t%l"))
 			}
 		case "new":
-			newPool(poolCollection, tokens[1], tokens[2])
-		case "start":
-			temp, err := strconv.Atoi(tokens[1])
-			if err != nil {
-				log.Fatal()
+			if len(tokens) >= 3 {
+				newPool(poolCollection, tokens[1], tokens[2])
 			}
-			if (temp >= 0) && (temp < len(*poolCollection)) {
-				runPool(poolCollection, temp)
-			} else {
-				fmt.Println("Invalid Index")
+		case "start":
+			if len(tokens) >= 2 {
+				temp, err := strconv.Atoi(tokens[1])
+				if err == nil {
+					if (temp >= 0) && (temp < len(*poolCollection)) {
+						runPool(poolCollection, temp)
+					} else {
+						fmt.Println("Invalid Index")
+					}
+				}
 			}
 		case "pause":
 			pauseAll(poolCollection)
